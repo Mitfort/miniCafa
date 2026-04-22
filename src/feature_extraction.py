@@ -1,17 +1,22 @@
 import numpy as np
+from collections import Counter
 
 class FeatureExtractor:
     def __init__(self, proteins):
         self.proteins = proteins
 
     def extract_features(self):
+        all_features = []
+
         for p in self.proteins:
             length = len(p["sequence"])
+
+            counts = Counter(p["sequence"])
 
             standard_aa = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
             seq = [1 if aa in p["sequence"] else 0 for aa in standard_aa]
 
-            aa_frequency = np.array([p["sequence"].count(aa) for aa in standard_aa]) / length
+            aa_frequency = np.array([counts[aa] for aa in standard_aa]) / length
             
             aa_weights = {
                 'A': 89, 'C': 121, 'D': 133, 'E': 147, 'F': 165, 'G': 75, 'H': 155, 'I': 131,
@@ -25,6 +30,8 @@ class FeatureExtractor:
 
             hydrofobic = sum(1 if aa in ['A', 'F', 'I', 'L', 'M', 'V', 'W', 'Y'] else 0 for aa in p["sequence"]) / length
 
-            feature_vector = np.concatenate([seq, aa_frequency, sequence_weight, charge, hydrofobic, length])
+            feature_vector = np.concatenate([seq, aa_frequency, [sequence_weight], [charge], [hydrofobic], [length]])
 
-        return feature_vector
+            all_features.append(feature_vector)
+
+        return np.array(all_features, dtype=np.float32)
