@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import random
 from collections import Counter
 from torch.utils.data import Dataset, DataLoader
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -7,7 +8,6 @@ from sklearn.model_selection import train_test_split
 
 from src.parser import parse_gzip, filter_proteins
 from src.feature_extraction_1 import FeatureExtractor
-
 # One hot 
 
 STANDARD_AA = [
@@ -66,6 +66,7 @@ def build_dataloaders(
     batch_size: int = 32,
     val_split: float = 0.1,
     test_split: float = 0.1,
+    max_samples: int = None,
     num_workers: int = -1,
 ):
     """
@@ -103,6 +104,10 @@ def build_dataloaders(
 
     print(f"{len(proteins):,} proteins | {len(valid_go):,} GO terms "
           f"(min_count={min_go_term_count})")
+    
+    if max_samples is not None and len(proteins) > max_samples:
+        proteins = random.sample(proteins, max_samples)
+        print(f"Resized to max_samples={max_samples}")
 
     # 3. Binarize GO term labels  →  multi-hot matrix
     mlb = MultiLabelBinarizer()
@@ -119,11 +124,11 @@ def build_dataloaders(
 
     indices = np.arange(len(proteins))
     train_val_idx, test_idx = train_test_split(
-        indices, test_size=test_split, random_state=42
+        indices, test_size=test_split
     )
     adj_val = val_split / (1.0 - test_split)
     train_idx, val_idx = train_test_split(
-        train_val_idx, test_size=adj_val, random_state=42
+        train_val_idx, test_size=adj_val
     )
 
     print(f"Split: train={len(train_idx):,} | val={len(val_idx):,} | test={len(test_idx):,}")
@@ -149,4 +154,99 @@ def build_dataloaders(
     val_loader = make_loader(make_dataset(val_idx), shuffle=False)
     test_loader = make_loader(make_dataset(test_idx),shuffle=False)
 
+    return train_loader, val_loader, test_loader, mlb, norm_stats
+
+
+def load_dataloaders_from_preprocessed(
+    data_dir: str = '../data',
+    batch_size: int = 64,
+    max_length: int = 1000,
+    num_workers: int = -1,
+):
+    """
+    Wczytaj DataLoadery z preprocessowanych danych (output z data_analysis_2.ipynb).
+    
+    Oczekuje następujących plików w data_dir:
+      - mini_cafa.csv (zawiera accession, sequence, seq_len, labels)
+      - mini_cafa_features_train.csv, mini_cafa_features_val.csv, mini_cafa_features_test.csv
+      - sample_weights_train.npy
+      - train_indices.npy, val_indices.npy, test_indices.npy
+    
+    Returns:
+        train_loader, val_loader, test_loader, mlb, norm_stats
+    """
+    import pandas as pd
+    
+    print("Wczytywanie preprocessowanych danych...")
+    
+    # 1. Wczytaj mini_cafa.csv i indeksy
+    df = pd.read_csv(f'{data_dir}/mini_cafa.csv')
+    train_idx = np.load(f'{data_dir}/train_indices.npy')
+    val_idx = np.load(f'{data_dir}/val_indices.npy')
+    test_idx = np.load(f'{data_dir}/test_indices.npy')
+    
+    # 2. Wczytaj features (preprocessowane)
+    features_train = pd.read_csv(f'{data_dir}/mini_cafa_features_train.csv').values.astype(np.float32)
+    features_val = pd.read_csv(f'{data_dir}/mini_cafa_features_val.csv').values.astype(np.float32)
+    features_test = pd.read_csv(f'{data_dir}/mini_cafa_features_test.csv').values.astype(np.float32)
+    
+    # 3. Przygotuj protein objects wg indeksów
+    proteins = df.to_dict(orient='records')
+    proteins_train = [proteins[i] for i in train_idx]
+    proteins_val = [proteins[i] for i in val_idx]
+    proteins_test = [proteins[i] for i in test_idx]
+    
+    # 4. Binaryzuj labels (GO terms) - muszą być w tej samej kolejności co train_idx, val_idx, test_idx
+    train_data = df.iloc[train_idx].reset_index(drop=True)
+    val_data = df.iloc[val_idx].reset_index(drop=True)
+    test_data = df.iloc[test_idx].reset_index(drop=True)
+    
+    # Parsuj labels z stringów "label1;label2;..."
+    def parse_labels_column(data):
+        return [
+            [lbl.strip() for lbl in row.split(';') if lbl.strip()]
+            for row in data['labels']
+        ]
+    
+    mlb = MultiLabelBinarizer()
+    labels_train_list = parse_labels_column(train_data)
+    labels_all_train = mlb.fit_transform(labels_train_list)
+    
+    labels_val_list = parse_labels_column(val_data)
+    labels_val = mlb.transform(labels_val_list)
+    
+    labels_test_list = parse_labels_column(test_data)
+    labels_test = mlb.transform(labels_test_list)
+    
+    # 5. Utwórz DataLoaders
+    def make_loader(proteins, features, labels, shuffle):
+        dataset = ProteinDataset(
+            proteins=proteins,
+            physics_features=features,
+            labels=labels,
+            max_length=max_length
+        )
+        return DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            pin_memory=True,
+        )
+    
+    train_loader = make_loader(proteins_train, features_train, labels_all_train, shuffle=True)
+    val_loader = make_loader(proteins_val, features_val, labels_val, shuffle=False)
+    test_loader = make_loader(proteins_test, features_test, labels_test, shuffle=False)
+    
+    norm_stats = {
+        'physics_dim': features_train.shape[1],
+        'num_go_terms': labels_all_train.shape[1]
+    }
+    
+    print(f"DataLoaders załadowane:")
+    print(f"  Train: {len(train_loader.dataset)} (batches: {len(train_loader)})")
+    print(f"  Val:   {len(val_loader.dataset)} (batches: {len(val_loader)})")
+    print(f"  Test:  {len(test_loader.dataset)} (batches: {len(test_loader)})")
+    print(f"  GO Terms: {norm_stats['num_go_terms']}")
+    
     return train_loader, val_loader, test_loader, mlb, norm_stats
