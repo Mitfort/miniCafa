@@ -17,20 +17,36 @@ STANDARD_AA = [
 
 AA_TO_IDX = {aa: i for i, aa in enumerate(STANDARD_AA)}
 
+# fast lookup table: map byte value -> aa index (or -1) for vectorized encoding
+_AA_MAPPING = np.full(256, -1, dtype=np.int16)
+for aa, i in AA_TO_IDX.items():
+    _AA_MAPPING[ord(aa)] = i
+
 def one_hot_encode(sequence: str, max_length: int) -> torch.Tensor:
     """
-    Encode a protein sequence as a (20, max_length) float32 tensor.
+    Vectorized one-hot encoding using NumPy for speed.
 
-    Sequences shorter than max_length are zero-padded on the right.
-    Unknown amino acids are silently skipped (left as zero — a neutral
-    "unknown" token that the CNN can learn to ignore).
+    Returns a (20, max_length) float32 tensor. Unknown characters are skipped.
     """
-    tensor = torch.zeros(20, max_length, dtype=torch.float32)
-    for i, aa in enumerate(sequence[:max_length]):
-        idx = AA_TO_IDX.get(aa)
-        if idx is not None:
-            tensor[idx, i] = 1.0
-    return tensor
+    seq_bytes = sequence[:max_length].upper().encode('ascii', 'ignore')
+    L = len(seq_bytes)
+    if L == 0:
+        return torch.zeros(20, max_length, dtype=torch.float32)
+
+    arr = np.frombuffer(seq_bytes, dtype=np.uint8)
+    idxs = _AA_MAPPING[arr]  # -1 for unknowns
+    valid_mask = idxs != -1
+    if not valid_mask.any():
+        return torch.zeros(20, max_length, dtype=torch.float32)
+
+    rows_np = idxs[valid_mask].astype(np.int64)
+    cols_np = np.nonzero(valid_mask)[0].astype(np.int64)
+
+    out = torch.zeros(20, max_length, dtype=torch.float32)
+    rows = torch.from_numpy(rows_np)
+    cols = torch.from_numpy(cols_np)
+    out[rows, cols] = 1.0
+    return out
 
 # Dataset 
 
