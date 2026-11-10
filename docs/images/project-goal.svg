@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="468" viewBox="0 0 1120 468" role="img" aria-labelledby="title desc">
+  <title id="title">From protein sequence to GO annotations</title>
+  <desc id="desc">A sequence of amino acids is the model input. Example output terms include ATP binding for molecular function, amino acid biosynthetic process for biological process, and cytoplasm for cellular component.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#101e32"/>
+      <stop offset="1" stop-color="#142e3b"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L8 5 L1 9" fill="none" stroke="#76dfcd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; fill: #f0f5fc; }
+      .mono { font-family: Consolas, 'Liberation Mono', monospace; }
+      .kicker { font-size: 15px; font-weight: 700; letter-spacing: 2.2px; fill: #76dfcd; }
+      .title { font-size: 36px; font-weight: 700; letter-spacing: -.8px; }
+      .label { font-size: 16px; font-weight: 650; }
+      .term { font-size: 22px; font-weight: 650; }
+      .muted { fill: #b3c6d9; }
+    </style>
+  </defs>
+  <rect width="1120" height="468" rx="26" fill="url(#background)"/>
+  <path d="M40 112H1080" stroke="#345065"/>
+  <text x="40" y="44" class="kicker">MINICAFA / PROJECT GOAL</text>
+  <text x="40" y="89" class="title">From protein sequence to GO annotations</text>
+
+  <rect x="40" y="181" width="345" height="199" rx="18" fill="#172b42" stroke="#3a5570"/>
+  <text x="64" y="215" class="kicker">INPUT</text>
+  <text x="64" y="251" class="term">Amino acid sequence</text>
+  <g fill="#224254" stroke="#3e6578">
+    <rect x="64" y="271" width="35" height="38" rx="7"/>
+    <rect x="105" y="271" width="35" height="38" rx="7"/>
+    <rect x="146" y="271" width="35" height="38" rx="7"/>
+    <rect x="187" y="271" width="35" height="38" rx="7"/>
+    <rect x="228" y="271" width="35" height="38" rx="7"/>
+    <rect x="269" y="271" width="35" height="38" rx="7"/>
+  </g>
+  <g class="mono" font-size="20" font-weight="700" text-anchor="middle">
+    <text x="81.5" y="297">M</text>
+    <text x="122.5" y="297">D</text>
+    <text x="163.5" y="297">T</text>
+    <text x="204.5" y="297">S</text>
+    <text x="245.5" y="297">P</text>
+    <text x="286.5" y="297">Y</text>
+    <text x="329" y="297" class="muted">…</text>
+  </g>
+  <text x="64" y="345" font-size="17" class="muted">One protein’s primary sequence</text>
+
+  <g fill="none" stroke="#76dfcd" stroke-width="2" stroke-linejoin="round">
+    <path d="M386 281H438V202H483" marker-end="url(#arrow)"/>
+    <path d="M438 281H483" marker-end="url(#arrow)"/>
+    <path d="M438 281V360H483" marker-end="url(#arrow)"/>
+  </g>
+  <circle cx="438" cy="281" r="5" fill="#76dfcd"/>
+
+  <text x="496" y="145" class="kicker">OUTPUT / EXAMPLE GO TERMS</text>
+  <g>
+    <rect x="496" y="167" width="584" height="70" rx="13" fill="#172f46" stroke="#3a5570"/>
+    <rect x="511" y="181" width="4" height="42" rx="2" fill="#84baff"/>
+    <text x="531" y="192" class="label" style="fill: #a8caff">Molecular function</text>
+    <text x="531" y="220" class="term">ATP binding</text>
+    <text x="1059" y="209" text-anchor="end" font-size="17" class="mono muted">GO:0005524</text>
+  </g>
+  <g>
+    <rect x="496" y="246" width="584" height="70" rx="13" fill="#252e48" stroke="#4c4e73"/>
+    <rect x="511" y="260" width="4" height="42" rx="2" fill="#c2a9ff"/>
+    <text x="531" y="271" class="label" style="fill: #d0bfff">Biological process</text>
+    <text x="531" y="299" class="term">Amino acid biosynthetic process</text>
+    <text x="1059" y="288" text-anchor="end" font-size="17" class="mono muted">GO:0008652</text>
+  </g>
+  <g>
+    <rect x="496" y="325" width="584" height="70" rx="13" fill="#163b42" stroke="#37676c"/>
+    <rect x="511" y="339" width="4" height="42" rx="2" fill="#76dfcd"/>
+    <text x="531" y="350" class="label" style="fill: #9be7d9">Cellular component</text>
+    <text x="531" y="378" class="term">Cytoplasm</text>
+    <text x="1059" y="367" text-anchor="end" font-size="17" class="mono muted">GO:0005737</text>
+  </g>
+  <text x="40" y="439" font-size="17" class="muted">Multi-label classification assigns a separate score to each term in the model’s vocabulary.</text>
+</svg>
