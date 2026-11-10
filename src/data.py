@@ -17,20 +17,34 @@ STANDARD_AA = [
 
 AA_TO_IDX = {aa: i for i, aa in enumerate(STANDARD_AA)}
 
-def one_hot_encode(sequence: str, max_length: int) -> torch.Tensor:
-    """
-    Encode a protein sequence as a (20, max_length) float32 tensor.
+# def one_hot_encode(sequence: str, max_length: int) -> torch.Tensor:
+#     """
+#     Encode a protein sequence as a (20, max_length) float32 tensor.
 
-    Sequences shorter than max_length are zero-padded on the right.
-    Unknown amino acids are silently skipped (left as zero — a neutral
-    "unknown" token that the CNN can learn to ignore).
-    """
-    tensor = torch.zeros(20, max_length, dtype=torch.float32)
-    for i, aa in enumerate(sequence[:max_length]):
-        idx = AA_TO_IDX.get(aa)
-        if idx is not None:
-            tensor[idx, i] = 1.0
-    return tensor
+#     Sequences shorter than max_length are zero-padded on the right.
+#     Unknown amino acids are silently skipped (left as zero — a neutral
+#     "unknown" token that the CNN can learn to ignore).
+#     """
+#     tensor = torch.zeros(20, max_length, dtype=torch.float32)
+#     for i, aa in enumerate(sequence[:max_length]):
+#         idx = AA_TO_IDX.get(aa)
+#         if idx is not None:
+#             tensor[idx, i] = 1.0
+#     return tensor
+
+_LOOKUP = np.full(128, -1, dtype=np.intp)
+for aa, idx in AA_TO_IDX.items():
+    _LOOKUP[ord(aa)] = idx
+
+def one_hot_encode(sequence: str, max_length: int) -> torch.Tensor:
+    seq = sequence[:max_length]
+    indices = _LOOKUP[np.frombuffer(seq.encode('ascii'), dtype=np.uint8)]
+    valid = indices >= 0
+    positions = np.where(valid)[0]
+
+    tensor = np.zeros((20, max_length), dtype=np.float32)
+    tensor[indices[valid], positions] = 1.0
+    return torch.from_numpy(tensor)
 
 # Dataset 
 

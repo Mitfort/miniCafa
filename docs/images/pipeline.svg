@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="742" viewBox="0 0 1120 742" role="img" aria-labelledby="title desc">
+  <title id="title">The miniCAFA pipeline</title>
+  <desc id="desc">Swiss-Prot provides sequences and GO annotations for supervision. Two parallel model branches encode the same amino acid sequence. A residual one-dimensional CNN learns patterns from the one-hot sequence. A multilayer perceptron processes 425 sequence-derived descriptors. The classifier concatenates these embeddings, applies a sigmoid to each output score, then fold models are averaged and thresholded during evaluation.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L8 5 L1 9" fill="none" stroke="#61768e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; fill: #152841; }
+      .kicker { font-size: 15px; font-weight: 700; letter-spacing: 2px; fill: #126558; }
+      .title { font-size: 36px; font-weight: 700; letter-spacing: -.8px; }
+      .heading { font-size: 23px; font-weight: 700; }
+      .step { font-size: 20px; font-weight: 650; }
+      .detail { font-size: 18px; fill: #405670; }
+      .edge { fill: none; stroke: #61768e; stroke-width: 2; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect width="1120" height="742" rx="26" fill="#f4f7fc"/>
+  <rect x="1" y="1" width="1118" height="740" rx="25" fill="none" stroke="#d5e0ec" stroke-width="2"/>
+  <text x="40" y="43" class="kicker">MINICAFA / PIPELINE</text>
+  <text x="40" y="87" class="title">Two ways to encode the same sequence</text>
+
+  <rect x="40" y="111" width="1040" height="88" rx="14" fill="#e6edf6" stroke="#cfdbeb"/>
+  <text x="62" y="142" class="kicker">TRAINING DATA</text>
+  <text x="62" y="175" class="detail">Swiss-Prot sequences and GO labels</text>
+  <path d="M370 169H420" class="edge" marker-end="url(#arrow)"/>
+  <text x="437" y="175" class="detail">Length and term filters</text>
+  <path d="M643 169H693" class="edge" marker-end="url(#arrow)"/>
+  <text x="710" y="175" class="detail">Train / validation / test split</text>
+
+  <rect x="373" y="223" width="374" height="46" rx="23" fill="#dcefe9" stroke="#add3c8"/>
+  <text x="560" y="253" class="step" text-anchor="middle">Amino acid sequence</text>
+  <path d="M560 269V289" class="edge"/>
+  <path d="M560 289H290V314" class="edge" marker-end="url(#arrow)"/>
+  <path d="M560 289H830V314" class="edge" marker-end="url(#arrow)"/>
+  <circle cx="560" cy="289" r="4" fill="#61768e"/>
+
+  <rect x="40" y="320" width="500" height="171" rx="16" fill="#eaf2ff" stroke="#b9cde8"/>
+  <text x="63" y="352" class="kicker" style="fill: #245895">01 / LEARNED SEQUENCE FEATURES</text>
+  <text x="63" y="387" class="heading">Residual 1D CNN</text>
+  <text x="63" y="419" class="detail">20-channel one-hot sequence</text>
+  <text x="63" y="448" class="detail">Parallel kernels of size 3, 5, and 9</text>
+  <text x="63" y="476" class="detail">Global max and mean pooling</text>
+
+  <rect x="580" y="320" width="500" height="171" rx="16" fill="#e6f4ee" stroke="#add3c8"/>
+  <text x="603" y="352" class="kicker">02 / SEQUENCE DESCRIPTORS</text>
+  <text x="603" y="387" class="heading">Physicochemical feature MLP</text>
+  <text x="603" y="419" class="detail">20 amino acid frequencies</text>
+  <text x="603" y="448" class="detail">400 dipeptide frequencies</text>
+  <text x="603" y="476" class="detail">5 global descriptors</text>
+
+  <path d="M290 491V510H830V491" class="edge"/>
+  <path d="M560 510V528" class="edge" marker-end="url(#arrow)"/>
+  <circle cx="560" cy="510" r="4" fill="#61768e"/>
+  <rect x="285" y="535" width="550" height="76" rx="14" fill="#1a344d"/>
+  <text x="560" y="565" class="heading" text-anchor="middle" style="fill: #f5f9ff">Concatenate embeddings and classify</text>
+  <text x="560" y="592" class="detail" text-anchor="middle" style="fill: #cedeed">One sigmoid score per GO term</text>
+
+  <path d="M560 611V630" class="edge" marker-end="url(#arrow)"/>
+  <rect x="40" y="637" width="1040" height="66" rx="14" fill="#e6edf6" stroke="#cfdbeb"/>
+  <text x="62" y="677" class="kicker">EVALUATION</text>
+  <text x="218" y="677" class="step">Average fold scores</text>
+  <path d="M426 670H460" class="edge" marker-end="url(#arrow)"/>
+  <text x="477" y="677" class="step">Apply a threshold</text>
+  <path d="M666 670H700" class="edge" marker-end="url(#arrow)"/>
+  <text x="717" y="677" class="step">Compare GO terms on the test split</text>
+</svg>

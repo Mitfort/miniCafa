@@ -5,7 +5,7 @@ import torch.nn.functional as F
 class ResidualConv(nn.Module):
     """
     Process:
-        1. -> Input (B, C_in, L)
+        1. -> Input (Batch, C_in, Length)
         2. -> Conv1d (C_in → C_out, kernel_size, padding)
         3. -> BatchNorm1d
         4. -> GELU
@@ -70,15 +70,15 @@ class ConvBranch(nn.Module):
 
     def forward(self, x):
         x = self.project(x)
-        x = self.residuals(x) # (Branch, out_channels, Length)
+        x = self.residuals(x) # (Batch, out_channels, Length)
 
         # Max pool "is this pattern present anywhere? (1 if present, 0 if not)"
         # Mean pool "how prevalent is this pattern across the sequence? (0 to 1)
 
-        max_pool = F.adaptive_max_pool1d(x, 1).squeeze(-1) # (Branch, out_channels)
-        mean_pool = x.mean(dim=-1) # (Branch, out_channels)
+        max_pool = F.adaptive_max_pool1d(x, 1).squeeze(-1) # (Batch, out_channels)
+        mean_pool = x.mean(dim=-1) # (Batch, out_channels)
 
-        return torch.cat([max_pool, mean_pool], dim=1) # (Branch, 2*out_channels)
+        return torch.cat([max_pool, mean_pool], dim=1) # (Batch, 2*out_channels)
     
 class ProteinEncoder(nn.Module):
     """
